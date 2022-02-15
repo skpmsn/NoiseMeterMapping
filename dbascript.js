@@ -8,36 +8,86 @@ var DbaFetchPending = null;
 var dBAFetchInterval = 1000;
 var sdatetime = '';
 
-// add base map
-if (logging) { console.log('Initializing base map') }
-var Mymap = new ol.Map({
-    target: 'map',
-    layers: [
-        new ol.layer.Tile({
-            source: new ol.source.OSM()
+
+
+
+var DisableBaseMap = false;
+var CreateLegend = false; // if true, disables live updates and uses a legend-oriented meter list
+
+
+if (CreateLegend) {
+    var MeterLocationsJSON = "./data/meterlocations_legend.json"
+
+} else {
+    var MeterLocationsJSON = "./data/meterlocations.json"
+}
+
+
+if (DisableBaseMap) {
+
+    // add blank base map
+    if (logging) { console.log('Initializing base map') }
+    var Mymap = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: null // set to 'null' for blank map
+            })
+        ],
+        interactions: ol.interaction.defaults({
+            doubleClickZoom: false,
+            dragAndDrop: false,
+            dragPan: true,
+            keyboardPan: false,
+            keyboardZoom: false,
+            mouseWheelZoom: true,
+            pointer: false,
+            select: false
+        }),
+        controls: ol.control.defaults({
+            attribution: true,
+            zoom: false,
+        }),
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-89.336, 43.100]),
+            zoom: 12.5,
+            minZoom: 10,
+            maxZoom: 14,
         })
-    ],
-    interactions: ol.interaction.defaults({
-        doubleClickZoom: false,
-        dragAndDrop: false,
-        dragPan: true,
-        keyboardPan: false,
-        keyboardZoom: false,
-        mouseWheelZoom: true,
-        pointer: false,
-        select: false
-    }),
-    controls: ol.control.defaults({
-        attribution: true,
-        zoom: false,
-    }),
-    view: new ol.View({
-        center: ol.proj.fromLonLat([-89.336, 43.100]),
-        zoom: 12.5,
-        minZoom: 10,
-        maxZoom: 14,
-    })
-});
+    });
+} else {
+    // add base map
+    if (logging) { console.log('Initializing base map') }
+    var Mymap = new ol.Map({
+        target: 'map',
+        layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM() // set to 'null' for blank map
+            })
+        ],
+        interactions: ol.interaction.defaults({
+            doubleClickZoom: false,
+            dragAndDrop: false,
+            dragPan: true,
+            keyboardPan: false,
+            keyboardZoom: false,
+            mouseWheelZoom: true,
+            pointer: false,
+            select: false
+        }),
+        controls: ol.control.defaults({
+            attribution: true,
+            zoom: false,
+        }),
+        view: new ol.View({
+            center: ol.proj.fromLonLat([-89.336, 43.100]),
+            zoom: 12.5,
+            minZoom: 10,
+            maxZoom: 14,
+        })
+    });
+}
+
 
 var getDbaMarkerColor = function(feature) {
     const dBA = feature.get('dBA');
@@ -123,7 +173,7 @@ Mymap.addLayer(MeterLocationsLayer);
 
 async function initMeterLocations() {
     if (logging) { console.log('Initializing Meter Locations layer'); }
-    let resp = await fetch('./data/meterlocations.json');
+    let resp = await fetch(MeterLocationsJSON);
     MeterLocations = await resp.json();
     for (m in MeterLocations) {
         let location = MeterLocations[m].location;
