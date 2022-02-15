@@ -8,11 +8,9 @@ var DbaFetchPending = null;
 var dBAFetchInterval = 1000;
 var sdatetime = '';
 
-
-
-
-var DisableBaseMap = false;
-var CreateLegend = false; // if true, disables live updates and uses a legend-oriented meter list
+var DisableBaseMap = true; // if true, creates a blank tile layer instead of OSM
+var CreateLegend = true; // if true, disables live updates and uses a legend-oriented meter list that also has pre-set dB readings
+var DisableUpdating = true; // if true, disable live updates (use together with CreateLegend flag above)
 
 
 if (CreateLegend) {
@@ -175,22 +173,48 @@ async function initMeterLocations() {
     if (logging) { console.log('Initializing Meter Locations layer'); }
     let resp = await fetch(MeterLocationsJSON);
     MeterLocations = await resp.json();
-    for (m in MeterLocations) {
-        let location = MeterLocations[m].location;
-        let slocation = location.toString();
-        const newfeature = new ol.Feature({
-            geometry: new ol.geom.Point(ol.proj.fromLonLat([MeterLocations[m].lon, MeterLocations[m].lat])),
-        });
-        newfeature.setId(location);
-        newfeature.set('Location', slocation);
-        newfeature.set('Meter', null);
-        newfeature.set('sdBA', '--');
-        newfeature.set('dBA', null);
-        newfeature.set('epoch', Date.now());
-        newfeature.set('age', 99);
-        MeterMarkerFeatures.push(newfeature);
 
+    if (CreateLegend) {
+        for (m in MeterLocations) {
+            const location = MeterLocations[m].location;
+            // if (CreateLegend) {
+            const dBA = MeterLocations[m].dba;
+            const sdBA = dBA.toString();
+            const age = 0
+            const slocation = location.toString();
+            const newfeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([MeterLocations[m].lon, MeterLocations[m].lat])),
+            });
+            newfeature.setId(location);
+            newfeature.set('Location', slocation);
+            newfeature.set('Meter', null);
+            newfeature.set('epoch', Date.now());
+            newfeature.set('sdBA', sdBA);
+            newfeature.set('dBA', dBA);
+            newfeature.set('age', 0);
+            MeterMarkerFeatures.push(newfeature);
+        }
+    } else {
+        for (m in MeterLocations) {
+            const location = MeterLocations[m].location;
+            const dBA = null;
+            const sdBA = '--';
+            const age = 99;
+            const slocation = location.toString();
+            const newfeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([MeterLocations[m].lon, MeterLocations[m].lat])),
+            });
+            newfeature.setId(location);
+            newfeature.set('Location', slocation);
+            newfeature.set('Meter', null);
+            newfeature.set('epoch', Date.now());
+            newfeature.set('sdBA', sdBA);
+            newfeature.set('dBA', dBA);
+            newfeature.set('age', 0);
+            MeterMarkerFeatures.push(newfeature);
+        }
     }
+
 
     nMeters = MeterMarkerFeatures.getLength();
     if (logging) { console.log('# of meters...', nMeters); }
@@ -276,5 +300,8 @@ function updateDbaData() {
         console.log('dBA data request fail');
     });
 }
-updateDbaData();
-window.setInterval(updateDbaData, dBAFetchInterval);
+
+if (!DisableUpdating) {
+    updateDbaData();
+    window.setInterval(updateDbaData, dBAFetchInterval);
+}
