@@ -8,9 +8,9 @@ var DbaFetchPending = null;
 var dBAFetchInterval = 1000;
 var sdatetime = '';
 
-var DisableBaseMap = true; // if true, creates a blank tile layer instead of OSM
-var CreateLegend = true; // if true, disables live updates and uses a legend-oriented meter list that also has pre-set dB readings
-var DisableUpdating = true; // if true, disable live updates (use together with CreateLegend flag above)
+var DisableBaseMap = false; // if true, creates a blank tile layer instead of OSM
+var CreateLegend = false; // if true, disables live updates and uses a legend-oriented meter list that also has pre-set dB readings
+var DisableUpdating = false; // if true, disable live updates (use together with CreateLegend flag above)
 
 
 if (CreateLegend) {
@@ -112,8 +112,10 @@ var getDbaMarkerColor = function(feature) {
         h = 40 - dBAlastdigit / 10 * 20;
     } else if (dBAdecade == 9) {
         h = 10 - dBAlastdigit / 10 * 30;
-    } else if (dBAdecade > 9 && dBA <= 120) {
-        h = 0;
+    } else if (dBAdecade == 10) {
+        h = 300;
+    } else if (dBAdecade > 10 && dBA <= 120) {
+        h = 275;
     } else {
         return [200, 200, 200]; // grey    
     }
